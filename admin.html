@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台灣黑熊出沒預警平台｜後台總覽</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS & JS CDN -->
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-lg flex flex-col py-6 px-4">
+      <a href="index.html" class="mb-6 flex items-center text-green-700 hover:text-green-900 font-bold"><span class="mr-2">←</span>回前台首頁</a>
+      <nav class="flex-1">
+        <ul class="space-y-2">
+          <li><a href="admin.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">總覽</a></li>
+          <li><a href="admin/upload.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">資料上傳</a></li>
+          <li><a href="admin/label.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">AI 標註與修正</a></li>
+          <li><a href="admin/model.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">模型辨識查詢</a></li>
+          <li><a href="admin/records.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">偵測記錄總表</a></li>
+          <li><a href="admin/settings.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">通報條件設定</a></li>
+          <li><a href="admin/permission.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">權限與單位管理</a></li>
+          <li><a href="admin/report.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">趨勢報表匯出</a></li>
+          <li><a href="admin/announcement.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">公告管理</a></li>
+          <li><a href="admin/simulation.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">出沒模擬參數</a></li>
+          <li><a href="admin/about.html" class="block px-3 py-2 rounded hover:bg-green-50 transition">關於我們維護</a></li>
+        </ul>
+      </nav>
+      <div class="mt-8 text-xs text-gray-400 text-center">台灣黑熊出沒預警平台 後台</div>
+    </aside>
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-h-screen">
+      <!-- Header -->
+      <header class="flex justify-end items-center bg-white shadow px-8 py-4">
+        <div class="flex items-center space-x-4">
+          <span class="text-gray-700 font-medium">admin@example.com</span>
+          <button class="bg-gray-200 text-gray-700 px-4 py-1 rounded hover:bg-gray-300 cursor-not-allowed" disabled>登出</button>
+        </div>
+      </header>
+      <!-- Main Section -->
+      <main class="flex-1 p-8 bg-gray-50">
+        <div class="bg-yellow-100 border-l-4 border-yellow-400 text-yellow-800 p-4 mb-6 rounded">
+          此功能尚未實作，預留後端 API 串接
+        </div>
+        <section class="container mx-auto px-0">
+          <h1 class="text-3xl font-bold mb-6">系統儀表板</h1>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-lg shadow card-shadow p-6 flex flex-col items-center">
+              <div class="text-2xl font-bold text-green-700 mb-2" id="stat-today">132</div>
+              <div class="text-gray-600">今日辨識次數</div>
+            </div>
+            <div class="bg-white rounded-lg shadow card-shadow p-6 flex flex-col items-center">
+              <div class="text-2xl font-bold text-green-700 mb-2" id="stat-week">27</div>
+              <div class="text-gray-600">本週通報筆數</div>
+            </div>
+            <div class="bg-white rounded-lg shadow card-shadow p-6 flex flex-col items-center">
+              <div class="text-2xl font-bold text-green-700 mb-2" id="stat-upload">59</div>
+              <div class="text-gray-600">上傳圖片數量</div>
+            </div>
+            <div class="bg-white rounded-lg shadow card-shadow p-6 flex flex-col items-center">
+              <div class="text-2xl font-bold text-green-700 mb-2" id="stat-confidence">96.3%</div>
+              <div class="text-gray-600">模型辨識平均信心度</div>
+            </div>
+            <div class="bg-white rounded-lg shadow card-shadow p-6 flex flex-col items-center col-span-1 md:col-span-2 lg:col-span-1">
+              <div class="text-lg font-bold text-green-700 mb-2">最近一筆辨識紀錄</div>
+              <div class="text-gray-700" id="stat-latest">2025-06-27 南投仁愛鄉 98%</div>
+            </div>
+          </div>
+        </section>
+      </main>
+      <footer class="bg-green-900 text-white py-6 mt-8">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-4">
+          <div class="mb-2 md:mb-0">聯絡我們：<a href="mailto:bear-alert@ecowatch.org" class="underline">bear-alert@ecowatch.org</a></div>
+          <div class="space-x-4">
+            <a href="#" class="underline hover:text-green-200">GitHub 原始碼</a>
+            <a href="#" class="underline hover:text-green-200">LINE 官方帳號</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

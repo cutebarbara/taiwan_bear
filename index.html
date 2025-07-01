@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台灣黑熊出沒預警平台</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <!-- 導覽列 -->
+  <nav class="bg-white shadow-md">
+    <div class="container mx-auto flex justify-between items-center py-4 px-6">
+      <div class="text-2xl font-bold text-green-800">台灣黑熊出沒預警平台</div>
+      <div class="space-x-6">
+        <a href="#hero" class="text-gray-700 hover:text-green-700">首頁</a>
+        <a href="#stats" class="text-gray-700 hover:text-green-700">統計</a>
+        <a href="#map-section" class="text-gray-700 hover:text-green-700">出沒地圖</a>
+        <a href="#simulation" class="text-gray-700 hover:text-green-700">出沒模擬</a>
+        <a href="#gallery" class="text-gray-700 hover:text-green-700">圖片</a>
+        <a href="#history" class="text-gray-700 hover:text-green-700">歷史紀錄</a>
+        <a href="#trend" class="text-gray-700 hover:text-green-700">趨勢圖</a>
+        <a href="#news" class="text-gray-700 hover:text-green-700">最新消息</a>
+        <a href="#education" class="text-gray-700 hover:text-green-700">教育資源</a>
+        <a href="#login" class="text-gray-700 hover:text-green-700">登入</a>
+        <a href="admin.html" class="text-green-700 font-bold">後台</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero 區 -->
+  <section id="hero" class="bg-green-100 py-12 text-center">
+    <h1 class="text-3xl md:text-5xl font-extrabold mb-4">即時掌握黑熊動態，守護台灣山林</h1>
+    <p class="text-lg md:text-2xl text-green-800">AI影像辨識警示通報平台</p>
+  </section>
+
+  <!-- 偵測統計卡片 -->
+  <section id="stats" class="container mx-auto py-8 px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white rounded-lg shadow card-shadow p-6 flex flex-col items-center">
+      <div class="text-3xl font-bold text-green-700 mb-2" id="stat-today">123</div>
+      <div class="text-gray-600">今日辨識次數</div>
+    </div>
+    <div class="bg-white rounded-lg shadow card-shadow p-6 flex flex-col items-center">
+      <div class="text-3xl font-bold text-green-700 mb-2" id="stat-sms">45</div>
+      <div class="text-gray-600">已推播簡訊數</div>
+    </div>
+    <div class="bg-white rounded-lg shadow card-shadow p-6 flex flex-col items-center">
+      <div class="text-3xl font-bold text-green-700 mb-2" id="stat-line">67</div>
+      <div class="text-gray-600">已推播LINE通知數</div>
+    </div>
+  </section>
+
+  <!-- 出沒熱點地圖 -->
+  <section id="map-section" class="container mx-auto py-8 px-4">
+    <h2 class="text-xl font-bold mb-4">出沒熱點地圖</h2>
+    <div id="map" class="w-full h-72 rounded-lg shadow"></div>
+  </section>
+
+  <!-- 出沒模擬範圍 -->
+  <section id="simulation" class="container mx-auto py-8 px-4">
+    <h2 class="text-xl font-bold mb-4">模擬出沒範圍（5km 示意）</h2>
+    <div id="simulation-map" class="w-full h-72 rounded-lg shadow"></div>
+  </section>
+
+  <!-- 黑熊偵測結果圖片展示區 -->
+  <section id="gallery" class="container mx-auto py-8 px-4">
+    <h2 class="text-xl font-bold mb-4">黑熊偵測結果</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center">
+        <img src="https://placehold.co/300x200?text=黑熊1" alt="黑熊1" class="rounded mb-2 w-full h-40 object-cover" id="img-1">
+        <div class="text-sm text-gray-700" id="img-1-location">地點：南投縣仁愛鄉</div>
+        <div class="text-sm text-gray-700" id="img-1-score">信心分數：98%</div>
+        <div class="text-sm text-gray-500" id="img-1-date">2025-06-26 08:30</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center">
+        <img src="https://placehold.co/300x200?text=黑熊2" alt="黑熊2" class="rounded mb-2 w-full h-40 object-cover" id="img-2">
+        <div class="text-sm text-gray-700" id="img-2-location">地點：花蓮縣秀林鄉</div>
+        <div class="text-sm text-gray-700" id="img-2-score">信心分數：95%</div>
+        <div class="text-sm text-gray-500" id="img-2-date">2025-06-26 09:10</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center">
+        <img src="https://placehold.co/300x200?text=黑熊3" alt="黑熊3" class="rounded mb-2 w-full h-40 object-cover" id="img-3">
+        <div class="text-sm text-gray-700" id="img-3-location">地點：台中市和平區</div>
+        <div class="text-sm text-gray-700" id="img-3-score">信心分數：92%</div>
+        <div class="text-sm text-gray-500" id="img-3-date">2025-06-26 10:05</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 出沒歷史紀錄表格 -->
+  <section id="history" class="container mx-auto py-8 px-4">
+    <h2 class="text-xl font-bold mb-4">出沒歷史紀錄</h2>
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white rounded-lg shadow">
+        <thead>
+          <tr class="bg-green-100 text-left">
+            <th class="py-2 px-4">時間</th>
+            <th class="py-2 px-4">地點</th>
+            <th class="py-2 px-4">來源單位</th>
+            <th class="py-2 px-4">信心度</th>
+            <th class="py-2 px-4">圖片</th>
+          </tr>
+        </thead>
+        <tbody id="history-table-body">
+          <tr>
+            <td class="py-2 px-4" id="history-1-date">2025-06-26 08:30</td>
+            <td class="py-2 px-4" id="history-1-location">南投縣仁愛鄉</td>
+            <td class="py-2 px-4" id="history-1-source">AI影像辨識</td>
+            <td class="py-2 px-4" id="history-1-score">98%</td>
+            <td class="py-2 px-4"><img src="https://placehold.co/60x40?text=1" alt="1" class="rounded" id="history-1-img"></td>
+          </tr>
+          <tr>
+            <td class="py-2 px-4" id="history-2-date">2025-06-26 09:10</td>
+            <td class="py-2 px-4" id="history-2-location">花蓮縣秀林鄉</td>
+            <td class="py-2 px-4" id="history-2-source">通報系統</td>
+            <td class="py-2 px-4" id="history-2-score">95%</td>
+            <td class="py-2 px-4"><img src="https://placehold.co/60x40?text=2" alt="2" class="rounded" id="history-2-img"></td>
+          </tr>
+          <tr>
+            <td class="py-2 px-4" id="history-3-date">2025-06-26 10:05</td>
+            <td class="py-2 px-4" id="history-3-location">台中市和平區</td>
+            <td class="py-2 px-4" id="history-3-source">AI影像辨識</td>
+            <td class="py-2 px-4" id="history-3-score">92%</td>
+            <td class="py-2 px-4"><img src="https://placehold.co/60x40?text=3" alt="3" class="rounded" id="history-3-img"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 趨勢圖表 -->
+  <section id="trend" class="container mx-auto py-8 px-4">
+    <h2 class="text-xl font-bold mb-4">偵測趨勢圖表</h2>
+    <div class="bg-white rounded-lg shadow p-6">
+      <canvas id="trend-chart" height="80"></canvas>
+    </div>
+  </section>
+
+  <!-- 最新消息 -->
+  <section id="news" class="container mx-auto py-8 px-4">
+    <h2 class="text-xl font-bold mb-4">最新消息</h2>
+    <ul class="bg-white rounded-lg shadow divide-y" id="news-list">
+      <li class="p-4" id="news-1"><span class="font-bold">[2025-06-25]</span> 黑熊出沒警示平台正式上線！</li>
+      <li class="p-4" id="news-2"><span class="font-bold">[2025-06-20]</span> 新增AI辨識模型，提升準確率。</li>
+      <li class="p-4" id="news-3"><span class="font-bold">[2025-06-15]</span> 整合LINE推播功能，歡迎訂閱。</li>
+    </ul>
+  </section>
+
+  <!-- 教育資源模組 -->
+  <section id="education" class="container mx-auto py-8 px-4">
+    <h2 class="text-xl font-bold mb-4">遇到熊怎麼辦？</h2>
+    <div class="flex flex-col md:flex-row items-center bg-white rounded-lg shadow p-6">
+      <img src="https://placehold.co/160x160?text=插圖" alt="遇到熊插圖" class="rounded mb-4 md:mb-0 md:mr-6 w-40 h-40 object-cover" id="edu-img">
+      <p class="text-gray-700" id="edu-desc">遇到台灣黑熊時，請保持冷靜，勿驚慌或奔跑，慢慢後退並觀察黑熊動向，避免與其正面衝突。更多保育知識與自保方法，請參閱教育資源頁面。</p>
+    </div>
+  </section>
+
+  <!-- 使用者登入按鈕（預留） -->
+  <section id="login" class="container mx-auto py-8 px-4">
+    <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center">
+      <button class="bg-gray-300 text-gray-600 px-6 py-2 rounded cursor-not-allowed mb-2" disabled id="login-btn">登入（預留）</button>
+      <div class="text-sm text-gray-500">合作單位登入後可上傳資料</div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-green-900 text-white py-6 mt-8">
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-4">
+      <div class="mb-2 md:mb-0">聯絡我們：<a href="mailto:bear-alert@ecowatch.org" class="underline">bear-alert@ecowatch.org</a></div>
+      <div class="space-x-4">
+        <a href="#" class="underline hover:text-green-200">GitHub 原始碼</a>
+        <a href="#" class="underline hover:text-green-200">LINE 官方帳號</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JS: Leaflet 地圖與模擬範圍、Chart.js 趨勢圖 -->
+  <script>
+    // 出沒熱點地圖
+    var map = L.map('map').setView([23.6978, 120.9605], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap 貢獻者'
+    }).addTo(map);
+    // 假資料標記
+    var markerData = [
+      {lat: 23.97, lng: 121.1, popup: '2025-06-26<br>南投縣仁愛鄉'},
+      {lat: 24.15, lng: 121.6, popup: '2025-06-26<br>花蓮縣秀林鄉'},
+      {lat: 24.25, lng: 121.5, popup: '2025-06-26<br>台中市和平區'}
+    ];
+    var bounds = [];
+    markerData.forEach(function(row) {
+      bounds.push([row.lat, row.lng]);
+      L.marker([row.lat, row.lng]).addTo(map).bindPopup(row.popup);
+    });
+    if(bounds.length > 0) {
+      map.fitBounds(bounds, {padding: [30, 30]});
+    }
+
+    // 出沒模擬範圍地圖
+    var simMap = L.map('simulation-map').setView([23.97, 121.1], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap 貢獻者'
+    }).addTo(simMap);
+    // 示意圓形（5km）
+    var circle = L.circle([23.97, 121.1], {
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.2,
+      radius: 5000
+    }).addTo(simMap);
+    L.marker([23.97, 121.1]).addTo(simMap).bindPopup('模擬中心點');
+    simMap.fitBounds(circle.getBounds(), {padding: [30, 30]});
+
+    // 趨勢圖表（Chart.js）
+  let chartInitialized = false;
+
+  function drawTrendChart() {
+    if (chartInitialized) return;
+    chartInitialized = true;
+
+    // 強制畫布變寬之前不初始化圖表
+    const canvas = document.getElementById('trend-chart');
+    canvas.style.width = '100%'; // 明確指定寬度給 Chart.js
+    canvas.width = canvas.offsetWidth; // 設定 canvas 實體寬度
+
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['6/20', '6/21', '6/22', '6/23', '6/24', '6/25', '6/26'],
+        datasets: [{
+          label: '每日辨識次數',
+          data: [30, 45, 60, 50, 80, 90, 123],
+          backgroundColor: 'rgba(16, 185, 129, 0.7)'
+        }]
+      },
+      options: {
+        animation: false,
+        responsive: true,
+        maintainAspectRatio: false, // 加這行避免高度擠壓造成閃爍
+        plugins: {
+          legend: { display: false },
+          title: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // 等畫布真的進入畫面才初始化圖表
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      drawTrendChart();
+    }
+  }, { threshold: 0.1 });
+
+  observer.observe(document.getElementById('trend-chart'));
+  </script>
+</body>
+</html>
+

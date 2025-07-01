@@ -1,0 +1,23 @@
+/* Custom styles for Taiwan Black Bear Alert Platform */
+/* Add any additional styles here for future expansion */
+
+/* Example: Card shadow for professional look */
+.card-shadow {
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+}
+
+/* Example: Section spacing */
+section {
+  margin-bottom: 2.5rem;
+}
+
+/* Example: Placeholder for admin warning */
+.admin-warning {
+  background: #fffbe6;
+  color: #ad6800;
+  border: 1px solid #ffe58f;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
