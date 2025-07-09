@@ -1,52 +1,733 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet.heat CDN (必須在 leaflet.js 之後) -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>黑熊資料上傳｜後台</title>
   <link rel="stylesheet" href="../assets/style.css">
   <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-900">
   <nav class="bg-white shadow-md">
     <div class="container mx-auto flex justify-between items-center py-4 px-6">
       <div class="text-2xl font-bold text-green-800">台灣黑熊出沒預警平台｜後台</div>
       <div class="space-x-6">
-        <a href="../admin.html" class="text-gray-700 hover:text-green-700">總覽</a>
+        <a href="../index.html" class="text-gray-700 hover:text-green-700">回首頁</a>
         <a href="upload.html" class="text-green-700 font-bold">資料上傳</a>
-        <a href="label.html" class="text-gray-700 hover:text-green-700">AI 標註與修正</a>
-        <a href="model.html" class="text-gray-700 hover:text-green-700">模型辨識查詢</a>
-        <a href="records.html" class="text-gray-700 hover:text-green-700">偵測記錄總表</a>
-        <a href="settings.html" class="text-gray-700 hover:text-green-700">通報條件設定</a>
-        <a href="permission.html" class="text-gray-700 hover:text-green-700">權限與單位管理</a>
-        <a href="report.html" class="text-gray-700 hover:text-green-700">趨勢報表匯出</a>
         <a href="announcement.html" class="text-gray-700 hover:text-green-700">公告管理</a>
-        <a href="simulation.html" class="text-gray-700 hover:text-green-700">出沒模擬參數</a>
-        <a href="about.html" class="text-gray-700 hover:text-green-700">關於我們維護</a>
+        <a href="login.html" class="text-gray-700 hover:text-green-700">登入</a>
       </div>
     </div>
   </nav>
   <section class="container mx-auto py-8 px-4">
     <h1 class="text-2xl font-bold mb-4">黑熊資料上傳</h1>
-    <div class="admin-warning">此功能尚未實作，預留 API 使用。未來可整合檔案上傳、表單、資料驗證等元件。</div>
-    <form class="bg-white rounded-lg shadow p-6 flex flex-col gap-4 max-w-lg">
-      <label class="font-bold">選擇檔案（CSV/JPG/PNG）：
-        <input type="file" class="mt-2 border rounded p-2" disabled>
-      </label>
-      <label class="font-bold">備註：
-        <textarea class="mt-2 border rounded p-2" rows="3" placeholder="可輸入說明..." disabled></textarea>
-      </label>
-      <button class="bg-gray-300 text-gray-600 px-6 py-2 rounded cursor-not-allowed" disabled>上傳（預留）</button>
-    </form>
+    <div class="flex flex-col md:flex-row gap-6 mb-6">
+      <!-- 左側：上傳表單 -->
+      <form id="csv-upload-form" class="bg-white rounded-lg shadow p-6 flex flex-col gap-4 md:w-2/3 w-full">
+        <label class="font-bold">選擇檔案（CSV 格式）：
+          <input id="csv-file-input" type="file" class="mt-2 border rounded p-2 w-full">
+        </label>
+        <button id="upload-btn" type="button" class="w-full bg-green-700 text-white py-2 rounded hover:bg-green-800 font-bold text-lg mt-2">上傳</button>
+      </form>
+      <!-- 右側：操作說明 -->
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg shadow-sm p-6 md:w-1/3 w-full flex flex-col">
+        <div class="text-base font-bold flex items-center gap-2 text-yellow-800 mb-3">
+          <span class="text-xl">💡</span>
+          操作說明
+        </div>
+        <ol class="list-decimal list-inside space-y-1.5 text-sm text-gray-700 mb-4">
+          <li>選擇包含「經緯度」、「日期」、「次數」的 CSV 檔案</li>
+          <li>點擊「上傳」</li>
+          <li>選擇顯示「熱點圖」或「直方圖」</li>
+          <li>可下載圖表為 PNG 圖檔</li>
+        </ol>
+        <div class="border-t border-yellow-200 pt-3 mt-3 text-yellow-800 text-sm font-medium">
+          請使用 UTF-8 編碼，欄位名稱可使用中文或英文
+        </div>
+      </div>
+    </div>
+    <div id="csv-preview" class="my-6"></div>
+    <div id="processing-msg" class="my-6 text-center text-green-700 font-bold hidden">資料處理中，請稍候...</div>
+    <div id="chart-container" class="my-6 relative"></div>
+    <!-- 圖表切換按鈕（只保留一組，並美化） -->
+    <div class="flex justify-center gap-4 my-8" id="chart-switch-group">
+      <button id="show-heatmap-btn" type="button" class="chart-switch-btn border-2 border-green-700 text-green-800 font-extrabold px-7 py-2.5 rounded-full shadow-lg transition focus:outline-none bg-gradient-to-r from-green-100 to-green-50 hover:from-green-200 hover:to-green-100 active:scale-95">熱點圖</button>
+      <button id="show-histogram-btn" type="button" class="chart-switch-btn border-2 border-blue-400 text-blue-700 font-bold px-7 py-2.5 rounded-full shadow-lg transition focus:outline-none bg-gradient-to-r from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 active:scale-95">直方圖</button>
+    </div>
+    <!-- 熱點圖區塊（加上時間滑桿與篩選功能） -->
+    <div id="heatmap-section">
+      <!-- 時間滑桿與篩選區塊 -->
+      <div id="heatmap-date-filter" class="flex flex-col md:flex-row items-center gap-4 bg-gray-100 rounded-lg p-4 mb-4">
+        <div class="flex flex-col md:flex-row items-center gap-2 w-full">
+          <label class="font-bold text-sm md:mr-2">選擇日期區間：</label>
+          <input id="date-range-start" type="range" min="0" max="0" value="0" class="flex-1 mx-2">
+          <input id="date-range-end" type="range" min="0" max="0" value="0" class="flex-1 mx-2">
+          <span id="date-range-label" class="text-gray-700 text-sm font-medium ml-2">—</span>
+        </div>
+        <button id="filter-heatmap-btn" type="button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition whitespace-nowrap">重新產生熱點圖</button>
+      </div>
+      <div id="map" class="w-full h-[400px] md:h-[600px] max-h-[80vh] rounded-lg shadow my-6"></div>
+      <div style="text-align:center; margin-top:20px;">
+        <button id="download-heatmap-btn" type="button"
+          class="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-6 rounded shadow transition">
+          下載熱點圖
+        </button>
+      </div>
+    </div>
+    <!-- 直方圖區塊（只保留一組） -->
+    <div id="histogram-section" class="my-8 bg-white rounded-lg shadow p-6 max-w-3xl mx-auto hidden">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+        <div class="text-xl font-bold text-blue-900 mb-2 md:mb-0">黑熊出沒統計直方圖</div>
+        <div class="flex space-x-2" id="histogram-toggle-group">
+          <button type="button" data-mode="year" class="histogram-toggle-btn border-2 border-blue-400 text-blue-700 font-bold px-4 py-1 rounded transition focus:outline-none">年</button>
+          <button type="button" data-mode="season" class="histogram-toggle-btn border-2 border-blue-400 text-blue-700 font-bold px-4 py-1 rounded transition focus:outline-none">季節</button>
+          <button type="button" data-mode="month" class="histogram-toggle-btn border-2 border-blue-400 text-blue-700 font-bold px-4 py-1 rounded transition focus:outline-none">月</button>
+        </div>
+      </div>
+      <div class="bg-blue-50 rounded-lg p-4 flex flex-col items-center" style="height:420px;">
+        <div style="height:400px;width:100%;display:flex;align-items:center;justify-content:center;">
+          <canvas id="barChart" height="400" style="max-height:400px;max-width:100%;display:block;"></canvas>
+        </div>
+        <button id="download-bar-btn" type="button"
+          class="mt-3 bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded shadow transition"
+          style="width:fit-content;align-self:center;">
+          下載圖表
+        </button>
+      </div>
+    </div>
   </section>
   <footer class="bg-green-900 text-white py-6 mt-8">
-    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-4">
-      <div class="mb-2 md:mb-0">聯絡我們：<a href="mailto:bear-alert@ecowatch.org" class="underline">bear-alert@ecowatch.org</a></div>
-      <div class="space-x-4">
-        <a href="#" class="underline hover:text-green-200">GitHub 原始碼</a>
-        <a href="#" class="underline hover:text-green-200">LINE 官方帳號</a>
+  <script>
+    // 圖表切換功能
+    document.addEventListener('DOMContentLoaded', function() {
+      const heatmapSection = document.getElementById('heatmap-section');
+      const histogramSection = document.getElementById('histogram-section');
+      const btnHeatmap = document.getElementById('show-heatmap-btn');
+      const btnHistogram = document.getElementById('show-histogram-btn');
+      function setChartSwitch(active) {
+        if (active === 'heatmap') {
+          heatmapSection.classList.remove('hidden');
+          histogramSection.classList.add('hidden');
+          btnHeatmap.classList.add('border-green-700','bg-green-50','text-green-800','font-extrabold');
+          btnHeatmap.classList.remove('border-blue-400','bg-white','text-blue-700');
+          btnHistogram.classList.remove('border-blue-700','bg-blue-50','text-blue-900','font-extrabold');
+          btnHistogram.classList.add('border-blue-400','bg-white','text-blue-700','font-bold');
+        } else {
+          heatmapSection.classList.add('hidden');
+          histogramSection.classList.remove('hidden');
+          btnHistogram.classList.add('border-blue-700','bg-blue-50','text-blue-900','font-extrabold');
+          btnHistogram.classList.remove('border-blue-400','bg-white','text-blue-700');
+          btnHeatmap.classList.remove('border-green-700','bg-green-50','text-green-800','font-extrabold');
+          btnHeatmap.classList.add('border-blue-400','bg-white','text-blue-700','font-bold');
+        }
+      }
+      btnHeatmap.addEventListener('click', function(){ setChartSwitch('heatmap'); });
+      btnHistogram.addEventListener('click', function(){ setChartSwitch('histogram'); });
+      setChartSwitch('heatmap');
+    });
+    // 欄位名稱對應表
+    const FIELD_MAP = {
+      location: ['地點', 'location', '區域'],
+      count: ['次數', '數量', 'count', 'organismquantity'],
+      lng: ['經度', 'longitude', 'lng', 'verbatimlongitude'],
+      lat: ['緯度', 'latitude', 'lat', 'verbatimlatitude'],
+      eventdate: ['eventdate', '日期', 'date', '事件日期']
+    };
+
+    function findFieldIdx(headers, types) {
+      for (let i = 0; i < headers.length; i++) {
+        const h = headers[i].trim().toLowerCase();
+        if (types.includes(h)) return i;
+      }
+      return -1;
+    }
+
+    // Leaflet 熱點圖（leaflet.heat，id="map"）
+    let leafletMap = null;
+    let heatLayer = null;
+    let isHeatmapReady = false;
+    // 日期滑桿全域變數
+    let heatmapDateList = [];
+    let heatmapRawData = [];
+    let heatmapDateCol = null;
+    function drawHeatmap(dataArr, latCol = 'verbatimlatitude', lngCol = 'verbatimlongitude', countCol = 'organismquantity') {
+      const rawCount = dataArr.length;
+      const pointMap = new Map();
+      let sumLat = 0, sumLng = 0, validCount = 0;
+      for (let i = 0; i < dataArr.length; i++) {
+        const d = dataArr[i];
+        let lat = d[latCol], lng = d[lngCol];
+        if (lat === undefined || lng === undefined) continue;
+        if (typeof lat === 'string') lat = lat.trim();
+        if (typeof lng === 'string') lng = lng.trim();
+        if (lat === '' || lng === '') continue;
+        lat = parseFloat(lat);
+        lng = parseFloat(lng);
+        if (isNaN(lat) || isNaN(lng)) continue;
+        if (!isFinite(lat) || !isFinite(lng)) continue;
+        const key = lat.toFixed(6) + ',' + lng.toFixed(6);
+        if (!pointMap.has(key)) {
+          pointMap.set(key, { lat, lng, count: 0 });
+        }
+        pointMap.get(key).count += 1;
+      }
+      const heatData = [];
+      pointMap.forEach(pt => {
+        heatData.push([pt.lat, pt.lng, pt.count]);
+        sumLat += pt.lat;
+        sumLng += pt.lng;
+        validCount++;
+      });
+      if (heatData.length === 0) {
+        alert('無法產生熱點圖，因為無有效資料');
+        if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+        isHeatmapReady = false;
+        return;
+      }
+      let avgLat = 0, avgLng = 0, avgN = Math.min(heatData.length, 5);
+      for (let i = 0; i < avgN; i++) {
+        avgLat += heatData[i][0];
+        avgLng += heatData[i][1];
+      }
+      avgLat = avgLat / avgN;
+      avgLng = avgLng / avgN;
+      const mapDiv = document.getElementById('map');
+      if (mapDiv) {
+        const newDiv = mapDiv.cloneNode(false);
+        mapDiv.parentNode.replaceChild(newDiv, mapDiv);
+      }
+      if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+      leafletMap = L.map('map').setView([avgLat, avgLng], 7);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '© OpenStreetMap'
+      }).addTo(leafletMap);
+      if (heatLayer) { heatLayer.remove(); heatLayer = null; }
+      let maxCount = 1;
+      heatData.forEach(pt => {
+        if (pt[2] > maxCount) maxCount = pt[2];
+      });
+      heatLayer = L.heatLayer(heatData, {
+        radius: 40,
+        blur: 35,
+        maxZoom: 10,
+        max: maxCount,
+        gradient: {
+          0.0: '#800080',
+          0.2: '#0000ff',
+          0.4: '#00ff00',
+          0.6: '#ffff00',
+          0.8: '#ffa500',
+          1.0: '#ff0000'
+        }
+      }).addTo(leafletMap);
+      heatData.forEach(pt => {
+        const value = pt[2];
+        const marker = L.marker([pt[0], pt[1]], {
+          icon: L.divIcon({
+            className: 'heat-label',
+            html: `<div style="color:#222;font-size:13px;font-weight:bold;text-shadow:1px 1px 4px #fff;">${value}</div>`,
+            iconSize: [30, 18],
+            iconAnchor: [15, 9]
+          })
+        });
+        marker.addTo(leafletMap);
+      });
+      const bounds = L.latLngBounds(heatData.map(pt => [pt[0], pt[1]]));
+      leafletMap.fitBounds(bounds, {padding: [30, 30]});
+      isHeatmapReady = true;
+      document.getElementById('download-heatmap-btn').addEventListener('click', function () {
+        if (!isHeatmapReady) {
+          alert('請先上傳資料並產生熱點圖後再下載');
+          return;
+        }
+        var mapDiv = document.getElementById('map');
+        if (!mapDiv || !mapDiv.querySelector('canvas')) {
+          alert('請先上傳資料並產生熱點圖後再下載');
+          return;
+        }
+        html2canvas(mapDiv, {
+          useCORS: true,
+          backgroundColor: null
+        }).then(function (canvas) {
+          var link = document.createElement('a');
+          link.download = '熱點圖.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        });
+      }, { once: true });
+    }
+
+    // ====== 熱點圖時間滑桿與篩選功能 ======
+    // 取得所有不重複、排序後的日期清單
+    function getSortedDateList(dataArr) {
+      const dateSet = new Set();
+      dataArr.forEach(row => {
+        const nrow = normalizeHeaders(row);
+        const dateRaw = getEventDate(nrow);
+        const dateObj = parseDate(dateRaw);
+        if (dateObj) dateSet.add(dateObj.format('YYYY-MM-DD'));
+      });
+      return Array.from(dateSet).sort();
+    }
+
+    // 初始化滑桿與標籤
+    function setupHeatmapDateSlider(dateList) {
+      const startSlider = document.getElementById('date-range-start');
+      const endSlider = document.getElementById('date-range-end');
+      const label = document.getElementById('date-range-label');
+      if (!startSlider || !endSlider || !label || !dateList || dateList.length === 0) {
+        if (label) label.textContent = '—';
+        return;
+      }
+      startSlider.min = 0;
+      startSlider.max = dateList.length - 1;
+      startSlider.value = 0;
+      endSlider.min = 0;
+      endSlider.max = dateList.length - 1;
+      endSlider.value = dateList.length - 1;
+      function updateLabel() {
+        let s = Math.min(Number(startSlider.value), Number(endSlider.value));
+        let e = Math.max(Number(startSlider.value), Number(endSlider.value));
+        label.textContent = `${dateList[s]} ~ ${dateList[e]}`;
+      }
+      startSlider.oninput = updateLabel;
+      endSlider.oninput = updateLabel;
+      updateLabel();
+    }
+
+    // 依滑桿範圍過濾資料
+    function filterDataByDateRange(dataArr, dateList, startIdx, endIdx) {
+      if (!dateList || dateList.length === 0) return [];
+      const s = Math.min(startIdx, endIdx);
+      const e = Math.max(startIdx, endIdx);
+      const dateSet = new Set(dateList.slice(s, e + 1));
+      return dataArr.filter(row => {
+        const nrow = normalizeHeaders(row);
+        const dateRaw = getEventDate(nrow);
+        const dateObj = parseDate(dateRaw);
+        if (!dateObj) return false;
+        return dateSet.has(dateObj.format('YYYY-MM-DD'));
+      });
+    }
+
+    // 綁定滑桿按鈕事件
+    function setupHeatmapFilterButton() {
+      const btn = document.getElementById('filter-heatmap-btn');
+      if (!btn) return;
+      btn.onclick = function() {
+        if (!heatmapRawData || heatmapRawData.length === 0 || !heatmapDateList || heatmapDateList.length === 0) {
+          alert('請先上傳資料');
+          return;
+        }
+        const startSlider = document.getElementById('date-range-start');
+        const endSlider = document.getElementById('date-range-end');
+        let s = Math.min(Number(startSlider.value), Number(endSlider.value));
+        let e = Math.max(Number(startSlider.value), Number(endSlider.value));
+        const filtered = filterDataByDateRange(heatmapRawData, heatmapDateList, s, e);
+        if (!filtered || filtered.length === 0) {
+          alert('所選日期區間內無資料');
+          if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+          isHeatmapReady = false;
+          return;
+        }
+        // 重新繪製熱點圖
+        drawHeatmap(filtered, 'verbatimlatitude', 'verbatimlongitude', 'organismquantity');
+      };
+    }
+
+    // 直方圖功能
+    let chartInstance = null;
+    let histogramRawData = [];
+    let histogramMode = 'month'; // 預設「月」
+
+    // 取得正規化欄位名稱
+    function normalizeHeaders(row) {
+      const newRow = {};
+      Object.keys(row).forEach(k => {
+        if (!k) return;
+        const nk = k.trim().toLowerCase();
+        newRow[nk] = row[k];
+      });
+      return newRow;
+    }
+
+    // 取得 eventdate 欄位（支援 BOM 與常見變形）
+    function getEventDate(nrow) {
+      return nrow['eventdate'] || nrow['\ufeffeventdate'] || nrow['日期'] || nrow['date'] || nrow['事件日期'] || '';
+    }
+    // 取得 organismquantity 欄位（支援 BOM 與常見變形）
+    function getOrganismQuantity(nrow) {
+      return nrow['organismquantity'] || nrow['\ufefforganismquantity'] || nrow['數量'] || nrow['count'] || nrow['次數'] || '';
+    }
+
+    // season helper
+    function getSeason(month) {
+      if ([3,4,5].includes(month)) return '春';
+      if ([6,7,8].includes(month)) return '夏';
+      if ([9,10,11].includes(month)) return '秋';
+      return '冬';
+    }
+
+    // 日期解析
+    function parseDate(str) {
+      if (!str) return null;
+      let d = dayjs(str, ['YYYY-MM-DD', 'YYYY/MM/DD', 'YYYY-M-D', 'YYYY/M/D'], true);
+      if (!d.isValid()) d = dayjs(str);
+      return d.isValid() ? d : null;
+    }
+
+    // 分組資料
+    function groupHistogramData(data, mode) {
+      const result = {};
+      data.forEach(row => {
+        const nrow = normalizeHeaders(row);
+        const dateRaw = getEventDate(nrow);
+        const countRaw = getOrganismQuantity(nrow);
+        const dateObj = parseDate(dateRaw);
+        if (!dateObj) return; // 跳過無效日期
+        let count = parseInt(countRaw, 10);
+        if (isNaN(count)) count = 1;
+        let key = '';
+        if (mode === 'year') {
+          key = dateObj.format('YYYY');
+        } else if (mode === 'season') {
+          key = dateObj.format('YYYY') + '年' + getSeason(dateObj.month() + 1) + '季';
+        } else if (mode === 'month') {
+          key = dateObj.format('YYYY-MM');
+        }
+        if (!result[key]) result[key] = 0;
+        result[key] += count;
+      });
+      let sortedKeys = Object.keys(result);
+      if (mode === 'year' || mode === 'month') {
+        sortedKeys = sortedKeys.sort();
+      } else if (mode === 'season') {
+        sortedKeys = sortedKeys.sort((a, b) => {
+          const order = { '春': 1, '夏': 2, '秋': 3, '冬': 4 };
+          const [ay, as] = a.match(/(\d{4})年(.+)季/).slice(1);
+          const [by, bs] = b.match(/(\d{4})年(.+)季/).slice(1);
+          if (ay !== by) return ay - by;
+          return order[as] - order[bs];
+        });
+      }
+      return { labels: sortedKeys, values: sortedKeys.map(k => result[k]) };
+    }
+
+    // 畫直方圖
+    function renderHistogram(mode) {
+      const ctx = document.getElementById('barChart').getContext('2d');
+      const { labels, values } = groupHistogramData(histogramRawData, mode);
+      if (chartInstance) chartInstance.destroy();
+      // 防呆：若無資料顯示空圖
+      const chartLabels = labels.length > 0 ? labels : [''];
+      const chartData = labels.length > 0 ? values : [0];
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartLabels,
+          datasets: [{
+            label: '出現次數',
+            data: chartData,
+            backgroundColor: 'rgba(37, 99, 235, 0.7)',
+            borderColor: 'rgba(37, 99, 235, 1)',
+            borderWidth: 2,
+            borderRadius: 6,
+            maxBarThickness: 48
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: false },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function(context) {
+                  return `出現次數：${context.parsed.y}`;
+                }
+              }
+            }
+          },
+          layout: { padding: 16 },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: mode === 'year' ? '年份' : (mode === 'season' ? '季節' : '月份'),
+                color: '#1e293b',
+                font: { size: 16, weight: 'bold' }
+              },
+              ticks: { color: '#1e293b', font: { size: 14 } },
+              grid: { display: false }
+            },
+            y: {
+              title: {
+                display: true,
+                text: '累計出現次數',
+                color: '#1e293b',
+                font: { size: 16, weight: 'bold' }
+              },
+              beginAtZero: true,
+              ticks: { color: '#1e293b', font: { size: 14 }, precision: 0 },
+              grid: { color: '#c7d2fe', borderDash: [4, 4] }
+            }
+          }
+        }
+      });
+    }
+
+    // 切換分類按鈕
+    function setHistogramToggleActive(mode) {
+      document.querySelectorAll('.histogram-toggle-btn').forEach(btn => {
+        if (btn.dataset.mode === mode) {
+          btn.classList.add('border-blue-700','bg-blue-100','text-blue-900','font-extrabold');
+          btn.classList.remove('border-blue-400','bg-white','text-blue-700','font-bold');
+        } else {
+          btn.classList.remove('border-blue-700','bg-blue-100','text-blue-900','font-extrabold');
+          btn.classList.add('border-blue-400','bg-white','text-blue-700','font-bold');
+        }
+      });
+    }
+
+    // 切換分類事件
+    document.querySelectorAll('.histogram-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const mode = btn.dataset.mode;
+        if (histogramMode !== mode) {
+          histogramMode = mode;
+          setHistogramToggleActive(mode);
+          renderHistogram(mode);
+        }
+      });
+    });
+
+    // 頁面載入預設空直方圖
+    document.addEventListener('DOMContentLoaded', function() {
+      setHistogramToggleActive(histogramMode);
+      if (document.getElementById('barChart')) {
+        renderHistogram(histogramMode);
+      }
+    });
+
+    // 上傳流程
+    let selectedFile = null;
+    document.getElementById('csv-file-input').addEventListener('change', function(e) {
+      selectedFile = e.target.files[0] || null;
+    });
+
+    document.getElementById('upload-btn').addEventListener('click', function() {
+      // 清除預覽表格（已移除表格渲染）
+      document.getElementById('csv-preview').innerHTML = '';
+      document.getElementById('chart-container').innerHTML = '';
+      if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+      if (!selectedFile) {
+        return;
+      }
+      document.getElementById('processing-msg').classList.remove('hidden');
+      setTimeout(() => {
+        Papa.parse(selectedFile, {
+          header: true,
+          skipEmptyLines: true,
+          complete: function(results) {
+            const data = results.data;
+            document.getElementById('processing-msg').classList.add('hidden');
+            if (!data || data.length === 0) {
+              return;
+            }
+            // 除錯：顯示第一筆資料
+            console.log(data[0]);
+
+            // 已移除預覽表格渲染
+
+            // 處理直方圖資料
+            histogramRawData = data;
+            renderHistogram(histogramMode); // 預設畫月
+
+            // ====== 熱點圖滑桿功能整合 ======
+            heatmapRawData = data;
+            heatmapDateList = getSortedDateList(data);
+            setupHeatmapDateSlider(heatmapDateList);
+            setupHeatmapFilterButton();
+            // 預設顯示全區間
+            drawHeatmap(data, 'verbatimlatitude', 'verbatimlongitude', 'organismquantity');
+          },
+          error: function() {
+            document.getElementById('processing-msg').classList.add('hidden');
+          }
+        });
+      }, 300);
+    });
+
+    (function addHtml2Canvas() {
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      document.head.appendChild(script);
+    })();
+    // 直方圖下載功能（白底）
+    document.addEventListener('DOMContentLoaded', function() {
+      var btn = document.getElementById('download-bar-btn');
+      if (btn) {
+        btn.addEventListener('click', function() {
+          var canvas = document.getElementById('barChart');
+          if (!canvas) {
+            alert('請先產生直方圖再下載');
+            return;
+          }
+          // 建立同尺寸新 canvas
+          var w = canvas.width;
+          var h = canvas.height;
+          var tmpCanvas = document.createElement('canvas');
+          tmpCanvas.width = w;
+          tmpCanvas.height = h;
+          var ctx = tmpCanvas.getContext('2d');
+          // 填白底
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, w, h);
+          // 畫上原圖
+          ctx.drawImage(canvas, 0, 0);
+          // 下載
+          var url = tmpCanvas.toDataURL('image/png');
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = '直方圖.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        });
+      }
+    });
+  </script>
+  <style>
+    .chart-switch-btn {
+      min-width: 110px;
+      font-size: 1.15rem;
+      border-width: 2px;
+      border-radius: 9999px;
+      font-weight: 700;
+      box-shadow: 0 2px 12px 0 rgba(16, 185, 129, 0.08);
+      transition: all 0.18s cubic-bezier(.4,0,.2,1);
+    }
+    .chart-switch-btn:hover, .chart-switch-btn:focus {
+      filter: brightness(1.08);
+      box-shadow: 0 4px 18px 0 rgba(37, 99, 235, 0.13);
+      font-weight: 900;
+      outline: none;
+      transform: translateY(-2px) scale(1.04);
+    }
+    .chart-switch-btn:active {
+      filter: brightness(0.98);
+      transform: scale(0.97);
+    }
+    .histogram-toggle-btn:hover, .histogram-toggle-btn:focus {
+      border-color: #2563eb !important;
+      background-color: #dbeafe !important;
+      color: #1e40af !important;
+    }
+    #histogram-section {
+      box-shadow: 0 2px 16px 0 rgba(37, 99, 235, 0.08);
+    }
+    .heat-label {
+      pointer-events: none;
+    }
+  </style>
+  <style>
+    /* 熱點圖滑桿區塊響應式 */
+    #heatmap-date-filter input[type=range] {
+      min-width: 80px;
+      max-width: 220px;
+      width: 100%;
+      margin: 0 4px;
+    }
+    #heatmap-date-filter {
+      flex-wrap: wrap;
+    }
+    #heatmap-date-filter label {
+      min-width: 80px;
+    }
+    #heatmap-date-filter span {
+      min-width: 120px;
+      text-align: center;
+    }
+    @media (max-width: 640px) {
+      #heatmap-date-filter {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      #heatmap-date-filter input[type=range] {
+        max-width: 100%;
+      }
+      #heatmap-date-filter span {
+        min-width: 80px;
+      }
+    }
+  </style>
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-4" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+      <div class="mb-2 md:mb-0" style="font-size: 1rem;">
+        聯絡我們：<a href="https://mail.google.com/mail/?view=cm&to=taiwanbear2025@gmail.com" target="_blank" class="underline">taiwanbear2025@gmail.com</a>
+      </div>
+      <div>
+        <a href="https://line.me/R/ti/p/@524rcfkx" target="_blank">
+          <img src="https://scdn.line-apps.com/n/line_add_friends/btn/zh-Hant.png"
+               alt="加入好友"
+               style="height: 25px; vertical-align: middle; display: inline-block; border: none;">
+        </a>
       </div>
     </div>
   </footer>
+  <script>
+    // 導覽列登入按鈕根據 localStorage.role 顯示身份
+    document.addEventListener('DOMContentLoaded', function() {
+      var role = localStorage.getItem('role');
+      var username = localStorage.getItem('username');
+      var loginLink = document.querySelector('a[href="login.html"]');
+      if (role && username && username !== '') {
+        if (loginLink) {
+          let roleText = role;
+          if (role === 'admin') roleText = 'admin';
+          else if (role === 'scientist') roleText = 'scientist';
+          else roleText = 'other';
+          loginLink.textContent = `👤 ${roleText}`;
+        }
+      } else {
+        if (loginLink) {
+          loginLink.textContent = '登入';
+        }
+      }
+    });
+  </script>
+  <script>
+    // 導覽列登入按鈕根據 localStorage.username 顯示帳號
+    document.addEventListener('DOMContentLoaded', function() {
+      var role = localStorage.getItem('role');
+      var username = localStorage.getItem('username');
+      var loginLink = document.querySelector('a[href="login.html"]');
+      function isValidUserRole(username, role) {
+        if (role === 'admin' && username === 'admin') return true;
+        if (role === 'scientist' && (username === 'scientist1' || username === 'scientist2')) return true;
+        if (role === 'other' && (username === 'other1' || username === 'other2')) return true;
+        return false;
+      }
+      if (role && username && username !== '' && role !== '' && isValidUserRole(username, role)) {
+        if (loginLink) {
+          loginLink.textContent = `👤 ${username}`;
+        }
+      } else {
+        if (loginLink) {
+          loginLink.textContent = '登入';
+        }
+      }
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>後台登入｜台灣黑熊出沒預警平台</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+  <nav class="bg-white shadow-md">
+    <div class="container mx-auto flex justify-between items-center py-4 px-6">
+      <div class="text-2xl font-bold text-green-800">台灣黑熊出沒預警平台｜後台</div>
+      <div class="space-x-6 flex items-center">
+        <a href="../index.html" class="text-gray-700 hover:text-green-700">回首頁</a>
+        <a href="upload.html" class="text-gray-700 hover:text-green-700">資料上傳</a>
+        <a href="announcement.html" class="text-gray-700 hover:text-green-700">公告管理</a>
+        <a id="login-link" href="login.html" class="text-green-700 font-bold">登入</a>
+        <a id="logout-link" href="#" class="text-gray-700 hover:text-green-700 ml-2" style="display: none;">登出</a>
+        <!-- user-info span 已移除，僅用 login-link/登出切換顯示 -->
+      </div>
+    </div>
+  </nav>
+  <div class="flex-grow flex flex-col justify-center items-center">
+
+    <!-- 前端模擬登入表單（無「模擬登入」字樣） -->
+    <div class="w-full max-w-md bg-white rounded-lg shadow p-8 mt-8">
+      <form id="mock-login-form" class="space-y-4">
+        <div>
+          <label for="mock-role" class="block font-bold mb-1">身份</label>
+          <select id="mock-role" class="w-full border rounded p-2">
+            <option value="admin">admin</option>
+            <option value="scientist">scientist</option>
+            <option value="other">other</option>
+          </select>
+        </div>
+        <div>
+          <label for="mock-username" class="block font-bold mb-1">帳號</label>
+          <input id="mock-username" type="text" class="w-full border rounded p-2" placeholder="請輸入帳號">
+        </div>
+        <div>
+          <label for="mock-password" class="block font-bold mb-1">密碼</label>
+          <input id="mock-password" type="password" class="w-full border rounded p-2" placeholder="請輸入密碼">
+        </div>
+        <button type="submit" class="w-full bg-green-700 text-white py-2 rounded hover:bg-green-800">登入</button>
+      </form>
+      <div id="mock-login-success" class="mt-4 text-green-800 text-center font-extrabold text-2xl tracking-wide hidden"></div>
+    </div>
+
+  </div>
+  <footer class="bg-green-900 text-white py-6 mt-8">
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-4" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+      <div class="mb-2 md:mb-0" style="font-size: 1rem;">
+        聯絡我們：<a href="https://mail.google.com/mail/?view=cm&to=taiwanbear2025@gmail.com" target="_blank" class="underline">taiwanbear2025@gmail.com</a>
+      </div>
+      <div>
+        <a href="https://line.me/R/ti/p/@524rcfkx" target="_blank">
+          <img src="https://scdn.line-apps.com/n/line_add_friends/btn/zh-Hant.png"
+               alt="加入好友"
+               style="height: 25px; vertical-align: middle; display: inline-block; border: none;">
+        </a>
+      </div>
+    </div>
+  </footer>
+  <script>
+    // 合法配對判斷
+    function isValidUserRole(username, role) {
+      if (role === 'admin' && username === 'admin') return true;
+      if (role === 'scientist' && (username === 'scientist1' || username === 'scientist2')) return true;
+      if (role === 'other' && (username === 'other1' || username === 'other2')) return true;
+      return false;
+    }
+
+    // 導覽列狀態切換
+    function updateNavbar() {
+      var role = localStorage.getItem('role');
+      var username = localStorage.getItem('username');
+      var loginLink = document.getElementById('login-link');
+      var logoutLink = document.getElementById('logout-link');
+      if (role && username && isValidUserRole(username, role)) {
+        // 已登入：顯示 👤帳號名稱 + 登出
+        if (loginLink) {
+          loginLink.textContent = `👤${username}`;
+          loginLink.style.display = '';
+        }
+        if (logoutLink) logoutLink.style.display = '';
+      } else {
+        // 未登入：只顯示登入，隱藏登出
+        if (loginLink) {
+          loginLink.textContent = '登入';
+          loginLink.style.display = '';
+        }
+        if (logoutLink) logoutLink.style.display = 'none';
+      }
+    }
+
+    // 登出功能
+    document.addEventListener('DOMContentLoaded', function() {
+      updateNavbar();
+      var logoutLink = document.getElementById('logout-link');
+      if (logoutLink) {
+        logoutLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          localStorage.removeItem('username');
+          localStorage.removeItem('role');
+          location.reload();
+        });
+      }
+    });
+
+    // 前端模擬登入功能
+    document.getElementById('mock-login-form').onsubmit = function(e) {
+      e.preventDefault();
+      const username = document.getElementById('mock-username').value.trim();
+      const password = document.getElementById('mock-password').value;
+      const role = document.getElementById('mock-role').value;
+      const successDiv = document.getElementById('mock-login-success');
+      let valid = false;
+      if (role === 'admin') {
+        if (username === 'admin' && password === '1234') valid = true;
+      } else if (role === 'scientist') {
+        if ((username === 'scientist1' || username === 'scientist2') && password === '1234') valid = true;
+      } else if (role === 'other') {
+        if ((username === 'other1' || username === 'other2') && password === '1234') valid = true;
+      }
+      if (valid) {
+        // 儲存帳號與身份
+        localStorage.setItem('username', username);
+        localStorage.setItem('role', role);
+        updateNavbar();
+        // 顯示成功訊息
+        let roleText = role;
+        if (role === 'admin') roleText = 'admin';
+        else if (role === 'scientist') roleText = 'scientist';
+        else roleText = 'other';
+        successDiv.textContent = `登入成功，歡迎光臨 ${roleText}！`;
+        successDiv.classList.remove('hidden');
+        // 2 秒後自動跳轉
+        setTimeout(function() {
+          if (role === 'admin') {
+            window.location.href = 'announcement.html';
+          } else {
+            window.location.href = 'upload.html';
+          }
+        }, 2000);
+      } else {
+        successDiv.classList.add('hidden');
+        alert('帳號或密碼錯誤，請重新輸入');
+      }
+    };
+
+    // 頁面載入時更新導覽列
+    document.addEventListener('DOMContentLoaded', updateNavbar);
+  </script>
+</body>
+</html>

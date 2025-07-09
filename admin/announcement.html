@@ -7,40 +7,92 @@
   <link rel="stylesheet" href="../assets/style.css">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="bg-gray-50 text-gray-900" style="min-height: 100vh; display: flex; flex-direction: column;">
   <nav class="bg-white shadow-md">
     <div class="container mx-auto flex justify-between items-center py-4 px-6">
       <div class="text-2xl font-bold text-green-800">台灣黑熊出沒預警平台｜後台</div>
       <div class="space-x-6">
-        <a href="../admin.html" class="text-gray-700 hover:text-green-700">總覽</a>
+        <a href="../index.html" class="text-gray-700 hover:text-green-700">回首頁</a>
         <a href="upload.html" class="text-gray-700 hover:text-green-700">資料上傳</a>
-        <a href="label.html" class="text-gray-700 hover:text-green-700">AI 標註與修正</a>
-        <a href="model.html" class="text-gray-700 hover:text-green-700">模型辨識查詢</a>
-        <a href="records.html" class="text-gray-700 hover:text-green-700">偵測記錄總表</a>
-        <a href="settings.html" class="text-gray-700 hover:text-green-700">通報條件設定</a>
-        <a href="permission.html" class="text-gray-700 hover:text-green-700">權限與單位管理</a>
-        <a href="report.html" class="text-gray-700 hover:text-green-700">趨勢報表匯出</a>
         <a href="announcement.html" class="text-green-700 font-bold">公告管理</a>
-        <a href="simulation.html" class="text-gray-700 hover:text-green-700">出沒模擬參數</a>
-        <a href="about.html" class="text-gray-700 hover:text-green-700">關於我們維護</a>
+        <a href="login.html" class="text-gray-700 hover:text-green-700">登入</a>
       </div>
     </div>
   </nav>
-  <section class="container mx-auto py-8 px-4">
-    <h1 class="text-2xl font-bold mb-4">公告管理</h1>
-    <div class="admin-warning">此功能尚未實作，預留 API 使用。未來可整合公告新增、編輯、刪除等元件。</div>
-    <div class="bg-white rounded-lg shadow p-6 flex flex-col gap-4 max-w-lg">
-      <div class="text-gray-600">預留公告管理表單與清單。</div>
-    </div>
-  </section>
+  <main class="mx-auto py-8 px-4" style="max-width: 800px; flex: 1; display: flex; flex-direction: column;">
+    <h1 class="text-3xl font-bold text-green-800 mb-6 text-center">最新公告</h1>
+    <article class="bg-white rounded-lg shadow p-8 flex flex-col gap-4">
+      <h2 class="text-2xl font-bold text-green-800 mb-2">歡迎使用台灣黑熊出沒預警平台</h2>
+      <p class="text-gray-700 mb-2">感謝您加入 <span class="font-bold text-green-700">台灣黑熊出沒預警平台</span>！本系統提供整合化的出沒熱點圖與時序直方圖，
+協助研究人員掌握黑熊在不同地點與時段的活動分佈，
+作為行為觀測、趨勢分析與後續研究的重要依據。</p>
+      <div>
+        <span class="font-bold text-green-700">主要功能：</span>
+        <ul class="list-disc list-inside mt-2 space-y-1 text-gray-800">
+          <li><span class="font-bold text-green-600">出沒紀錄圖像化呈現：</span>清楚標示各時段、各地點的出沒數據</li>
+          <li><span class="font-bold text-green-600">各地區出沒統計分析：</span>自動統整成圖表，快速掌握趨勢</li>
+          <li><span class="font-bold text-green-600">最新公告與預警資訊：</span>讓你不漏接任何一則關鍵訊息</li>
+        </ul>
+      </div>
+    </article>
+  </main>
   <footer class="bg-green-900 text-white py-6 mt-8">
-    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-4">
-      <div class="mb-2 md:mb-0">聯絡我們：<a href="mailto:bear-alert@ecowatch.org" class="underline">bear-alert@ecowatch.org</a></div>
-      <div class="space-x-4">
-        <a href="#" class="underline hover:text-green-200">GitHub 原始碼</a>
-        <a href="#" class="underline hover:text-green-200">LINE 官方帳號</a>
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-4" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+      <div class="mb-2 md:mb-0" style="font-size: 1rem;">
+        聯絡我們：<a href="https://mail.google.com/mail/?view=cm&to=taiwanbear2025@gmail.com" target="_blank" class="underline">taiwanbear2025@gmail.com</a>
+      </div>
+      <div>
+        <a href="https://line.me/R/ti/p/@524rcfkx" target="_blank">
+          <img src="https://scdn.line-apps.com/n/line_add_friends/btn/zh-Hant.png"
+               alt="加入好友"
+               style="height: 25px; vertical-align: middle; display: inline-block; border: none;">
+        </a>
       </div>
     </div>
   </footer>
+  <script>
+    // 導覽列登入按鈕根據 localStorage.role 顯示身份
+    document.addEventListener('DOMContentLoaded', function() {
+      var role = localStorage.getItem('role');
+      var username = localStorage.getItem('username');
+      var loginLink = document.querySelector('a[href="login.html"]');
+      if (role && username && username !== '') {
+        if (loginLink) {
+          let roleText = role;
+          if (role === 'admin') roleText = 'admin';
+          else if (role === 'scientist') roleText = 'scientist';
+          else roleText = 'other';
+          loginLink.textContent = `👤 ${roleText}`;
+        }
+      } else {
+        if (loginLink) {
+          loginLink.textContent = '登入';
+        }
+      }
+    });
+  </script>
+  <script>
+    // 導覽列登入按鈕根據 localStorage.username 顯示帳號
+    document.addEventListener('DOMContentLoaded', function() {
+      var role = localStorage.getItem('role');
+      var username = localStorage.getItem('username');
+      var loginLink = document.querySelector('a[href="login.html"]');
+      function isValidUserRole(username, role) {
+        if (role === 'admin' && username === 'admin') return true;
+        if (role === 'scientist' && (username === 'scientist1' || username === 'scientist2')) return true;
+        if (role === 'other' && (username === 'other1' || username === 'other2')) return true;
+        return false;
+      }
+      if (role && username && username !== '' && role !== '' && isValidUserRole(username, role)) {
+        if (loginLink) {
+          loginLink.textContent = `👤 ${username}`;
+        }
+      } else {
+        if (loginLink) {
+          loginLink.textContent = '登入';
+        }
+      }
+    });
+  </script>
 </body>
 </html>
